@@ -1,0 +1,3 @@
+[submodule "paperless-ngx"]
+    path = paperless-ngx
+    url = https://github.com/paperless-ngx/paperless-ngx.git
