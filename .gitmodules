@@ -1,3 +1,15 @@
+[submodule "paperless-ai"]
+    path = paperless-ai
+    url = https://github.com/clusterzx/paperless-ai.git
+
+[submodule "paperless-gpt"]
+    path = paperless-gpt
+    url = https://github.com/icereed/paperless-gpt.git
+
+[submodule "yomitoku"]
+    path = yomitoku
+    url = https://github.com/kotaro-kinoshita/yomitoku.git
+
 [submodule "paperless-ngx"]
     path = paperless-ngx
     url = https://github.com/paperless-ngx/paperless-ngx.git
