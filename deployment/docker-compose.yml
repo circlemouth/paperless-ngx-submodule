@@ -1,0 +1,74 @@
+services:
+  broker:
+    image: docker.io/library/redis:8
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+  db:
+    image: docker.io/library/postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+      - broker
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${PAPERLESS_ROOT_DIR}/data:/usr/src/paperless/data
+      - ${PAPERLESS_ROOT_DIR}/media:/usr/src/paperless/media
+      - ${PAPERLESS_ROOT_DIR}/consume:/usr/src/paperless/consume
+      - ${PAPERLESS_ROOT_DIR}/export:/usr/src/paperless/export
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBHOST: db
+      PAPERLESS_TIME_ZONE: Asia/Tokyo
+      PAPERLESS_URL: http://localhost:8000
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:-change-me-to-something-secure}
+
+      # OCR Configuration
+      PAPERLESS_OCR_LANGUAGES: "jpn"
+      PAPERLESS_OCR_LANGUAGE: "jpn+eng"
+      PAPERLESS_OCR_MODE: "skip"
+
+      # Consumer Configuration
+      PAPERLESS_CONSUMER_RECURSIVE: "true"
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
+
+  paperless-gpt:
+    image: icereed/paperless-gpt:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PAPERLESS_BASE_URL: "http://webserver:8000"
+      PAPERLESS_API_TOKEN: "${PAPERLESS_API_TOKEN}"
+
+      # Tag Management
+      MANUAL_TAG: "paperless-gpt"
+      AUTO_TAG: "paperless-gpt-auto"
+      AUTO_OCR_TAG: "paperless-gpt-ocr-auto"
+
+      # Title/Tag Generation (gpt-oss-20b-FLM)
+      LLM_PROVIDER: "openai"
+      LLM_MODEL: "gpt-oss-20b-FLM"
+      OPENAI_BASE_URL: "http://host.docker.internal:8001/api/v1"
+      OPENAI_API_KEY: "lemonade"
+
+      # AI OCR (Qwen3-4B-VL-FLM)
+      OCR_PROVIDER: "llm"
+      VISION_LLM_PROVIDER: "openai"
+      VISION_LLM_MODEL: "Qwen3-4B-VL-FLM"
+
+volumes:
+  pgdata:
+  redisdata:
